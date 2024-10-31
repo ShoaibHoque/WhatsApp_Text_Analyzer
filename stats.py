@@ -40,29 +40,27 @@ def fetchbusyuser(df):
     return count, newdf
 
 def createwordcloud(selected_user, df):
-
     if selected_user != 'Overall':
         df = df[df['user'] == selected_user]
 
     wc = WordCloud(width=500, height=500, min_font_size=10, background_color='white')
 
-    df_wc = wc.generate(df['Message'].str.cat(sep = " "))
+    # Use .str.cat to concatenate all messages into a single string
+    df_wc = wc.generate(df['Message'].str.cat(sep=" "))
 
     return df_wc
 
 # Most common words
 
 def getcommonwords(selected_user, df):
-
     # getting stop words
-    file = open ('stop_words_english.txt', 'r')
-    stopwords = file.read()
-    stopwords = stopwords.split('\n')
+    with open('stop_words_english.txt', 'r', encoding='utf-8') as file:
+        stopwords = file.read().split('\n')
 
     if selected_user != 'Overall':
         df = df[df['user'] == selected_user]
     
-    temp = df[(df['user'] != 'Group Notification') | (df['user'] != '<Media omitted>')]
+    temp = df[(df['user'] != 'Group Notification') & (df['user'] != '<Media omitted>')]
 
     words = []
 
@@ -74,32 +72,33 @@ def getcommonwords(selected_user, df):
     mostcommon = pd.DataFrame(Counter(words).most_common(20))
     return mostcommon
 
-def getemojistats(selected_user, df):
 
+def getemojistats(selected_user, df):
     if selected_user != "Overall":
         df = df[df['user'] == selected_user]
     
     emojis = []
     for message in df['Message']:
-        emojis.extend([c for c in message if c in emoji.UNICODE_EMOJI['en']])
+        emojis.extend([c for c in message if c in emoji.EMOJI_DATA])
     
     emojidf = pd.DataFrame(Counter(emojis).most_common(len(Counter(emojis))))
 
     return emojidf
 
-def monthtimeline(selected_user, df):
 
+def monthtimeline(selected_user, df):
     if selected_user != 'Overall':
         df = df[df['user'] == selected_user]
     
     temp = df.groupby(['Month', 'Day', 'Day_Name']).count()['Message'].reset_index()
 
     time = []
-    for i in range (temp.shape[0]):
-        time.append(temp['Day'][i]+ "-"+str(temp['Month'][i]))
+    for i in range(temp.shape[0]):
+        time.append(str(temp['Day'][i]) + "-" + str(temp['Month'][i]))
 
     temp['Time'] = time
     return temp
+
 
 def monthactivitymap(selected_user, df):
     if selected_user != 'Overall':
